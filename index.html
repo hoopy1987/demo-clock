@@ -13,6 +13,13 @@
             --text-primary: #ffffff;
             --text-secondary: rgba(255, 255, 255, 0.7);
             --accent: #00d4ff;
+            --clock-face-bg: rgba(255, 255, 255, 0.05);
+            --clock-border: rgba(255, 255, 255, 0.3);
+            --clock-number: rgba(255, 255, 255, 0.8);
+            --clock-center: #ffffff;
+            --second-hand: #ff6b6b;
+            --hour-gradient: linear-gradient(180deg, #667eea 0%, #764ba2 100%);
+            --minute-gradient: linear-gradient(180deg, #f093fb 0%, #f5576c 100%);
         }
         
         [data-theme="light"] {
@@ -21,6 +28,13 @@
             --text-primary: #1e1b4b;
             --text-secondary: rgba(30, 27, 75, 0.7);
             --accent: #2563eb;
+            --clock-face-bg: rgba(0, 0, 0, 0.05);
+            --clock-border: rgba(0, 0, 0, 0.2);
+            --clock-number: rgba(0, 0, 0, 0.7);
+            --clock-center: #333333;
+            --second-hand: #e74c3c;
+            --hour-gradient: linear-gradient(180deg, #4a5568 0%, #2d3748 100%);
+            --minute-gradient: linear-gradient(180deg, #718096 0%, #4a5568 100%);
         }
         
         body {
@@ -34,10 +48,17 @@
             transition: background 0.3s ease;
         }
         
-        .theme-toggle {
+        /* 右上角按钮容器 */
+        .controls {
             position: fixed;
             top: 20px;
             right: 20px;
+            display: flex;
+            gap: 10px;
+            z-index: 100;
+        }
+        
+        .control-btn {
             padding: 10px 20px;
             background: var(--container-bg);
             border: 1px solid var(--accent);
@@ -46,6 +67,12 @@
             cursor: pointer;
             backdrop-filter: blur(10px);
             transition: all 0.3s ease;
+            font-size: 1.2rem;
+        }
+        
+        .control-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 20px rgba(0, 212, 255, 0.3);
         }
         
         .clock-container {
@@ -56,7 +83,6 @@
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
-            transition: all 0.3s ease;
         }
         
         .clock {
@@ -64,7 +90,7 @@
             font-weight: 300;
             color: var(--text-primary);
             letter-spacing: 2px;
-            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
         }
         
         .date { font-size: 1.5rem; color: var(--text-secondary); margin-top: 15px; letter-spacing: 3px; }
@@ -103,32 +129,122 @@
         .label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 25px; letter-spacing: 5px; }
         .deploy-badge { position: fixed; bottom: 20px; right: 20px; padding: 8px 16px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 20px; color: #00d4ff; font-size: 0.8rem; }
         .help-text { position: fixed; bottom: 20px; left: 20px; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7; }
+        
+        /* ===== 模拟表盘样式 v2.1 ===== */
+        .analog-clock {
+            width: 280px;
+            height: 280px;
+            border: 3px solid var(--clock-border);
+            border-radius: 50%;
+            position: relative;
+            margin: 0 auto 20px;
+            background: var(--clock-face-bg);
+        }
+        
+        .analog-clock::before {
+            content: '';
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: var(--clock-center);
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+        }
+        
+        .clock-number {
+            position: absolute;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--clock-number);
+            transform: translate(-50%, -50%);
+        }
+        
+        .hand {
+            position: absolute;
+            bottom: 50%;
+            left: 50%;
+            transform-origin: bottom center;
+            border-radius: 4px;
+        }
+        
+        .hour-hand {
+            width: 6px;
+            height: 70px;
+            margin-left: -3px;
+            background: var(--hour-gradient);
+            z-index: 3;
+        }
+        
+        .minute-hand {
+            width: 4px;
+            height: 95px;
+            margin-left: -2px;
+            background: var(--minute-gradient);
+            z-index: 2;
+        }
+        
+        .second-hand {
+            width: 2px;
+            height: 110px;
+            margin-left: -1px;
+            background: var(--second-hand);
+            z-index: 1;
+            transition: transform 0.1s cubic-bezier(0.4, 2.08, 0.55, 0.44);
+        }
+        
+        .hidden { display: none !important; }
     </style>
 </head>
 <body>
-    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题 (T)">🌙/☀️</button>
+    <div class="controls">
+        <button class="control-btn" id="modeToggle" title="切换表盘模式 (M)">🔢</button>
+        <button class="control-btn" id="themeToggle" title="切换主题 (T)">🌙/☀️</button>
+    </div>
     
-    <div class="clock-container" ondblclick="toggleFullscreen()">
+    <!-- 数字时钟 -->
+    <div class="clock-container" id="digitalClock">
         <div class="date" id="date"></div>
         <div class="weekday" id="weekday"></div>
         <div class="clock" id="clock"></div>
         <div class="timezone-label" id="timezone-label">本地时间</div>
         <div class="seconds-indicator" id="seconds-indicator"></div>
-        
         <div class="timezone-buttons">
             <button class="tz-btn active" onclick="setTimezone('local')">🕐 本地</button>
             <button class="tz-btn" onclick="setTimezone('newyork')">🗽 纽约</button>
             <button class="tz-btn" onclick="setTimezone('london')">🏛️ 伦敦</button>
             <button class="tz-btn" onclick="setTimezone('tokyo')">🗼 东京</button>
         </div>
-        
-        <div class="label">双击进入全屏 | T切换主题 | F切换全屏</div>
+        <div class="label">双击进入全屏 | M切换表盘 | T切换主题 | F切换全屏</div>
     </div>
-    
-    <div class="deploy-badge">🚀 Auto Deployed</div>
+
+    <!-- 模拟表盘 -->
+    <div class="clock-container hidden" id="analogClock">
+        <div class="analog-clock" id="analogClockFace">
+            <div class="hand hour-hand" id="hourHand"></div>
+            <div class="hand minute-hand" id="minuteHand"></div>
+            <div class="hand second-hand" id="secondHand"></div>
+        </div>
+        <div class="date" id="analogDate"></div>
+        <div class="timezone-label" id="analogTimezoneLabel">本地时间</div>
+        <div class="timezone-buttons">
+            <button class="tz-btn active" onclick="setTimezone('local')">🕐 本地</button>
+            <button class="tz-btn" onclick="setTimezone('newyork')">🗽 纽约</button>
+            <button class="tz-btn" onclick="setTimezone('london')">🏛️ 伦敦</button>
+            <button class="tz-btn" onclick="setTimezone('tokyo')">🗼 东京</button>
+        </div>
+        <div class="label">双击进入全屏 | M切换表盘 | T切换主题 | F切换全屏</div>
+    </div>
+
+    <div class="deploy-badge">🚀 Auto Deployed v2.1</div>
     <div class="help-text">Develop Branch - Preview</div>
 
     <script>
+        // ============ 配置与状态 ============
+        const STORAGE_KEY_MODE = 'clock_mode';
+        const STORAGE_KEY_THEME = 'clock_theme';
         const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
         const timezones = {
             local: { label: '本地时间', offset: null },
@@ -136,7 +252,39 @@
             london: { label: '伦敦时间', offset: 0 },
             tokyo: { label: '东京时间', offset: 9 }
         };
+        
+        // 从 localStorage 读取状态
+        let currentMode = localStorage.getItem(STORAGE_KEY_MODE) || 'digital';
+        let currentTheme = localStorage.getItem(STORAGE_KEY_THEME) || 'dark';
         let currentTz = 'local';
+        
+        // ============ DOM 元素 ============
+        const digitalClock = document.getElementById('digitalClock');
+        const analogClock = document.getElementById('analogClock');
+        const modeToggle = document.getElementById('modeToggle');
+        const themeToggle = document.getElementById('themeToggle');
+        const html = document.documentElement;
+        
+        // ============ 模拟表盘初始化 ============
+        function generateClockNumbers() {
+            const clockFace = document.getElementById('analogClockFace');
+            const radius = 110;
+            
+            for (let i = 12; i >= 1; i--) {
+                const number = document.createElement('div');
+                number.className = 'clock-number';
+                number.textContent = i;
+                
+                const angle = (i * 30 - 90) * (Math.PI / 180);
+                const x = 50 + (radius / 280 * 100) * Math.cos(angle);
+                const y = 50 + (radius / 280 * 100) * Math.sin(angle);
+                
+                number.style.left = `${x}%`;
+                number.style.top = `${y}%`;
+                
+                clockFace.appendChild(number);
+            }
+        }
         
         // 创建秒针指示点
         const indicatorContainer = document.getElementById('seconds-indicator');
@@ -147,45 +295,44 @@
             indicatorContainer.appendChild(dot);
         }
         
+        // ============ 功能函数 ============
+        function applyMode(mode) {
+            currentMode = mode;
+            
+            if (currentMode === 'digital') {
+                digitalClock.classList.remove('hidden');
+                analogClock.classList.add('hidden');
+                modeToggle.textContent = '🔢';
+            } else {
+                digitalClock.classList.add('hidden');
+                analogClock.classList.remove('hidden');
+                modeToggle.textContent = '🕐';
+            }
+            
+            // 保存到 localStorage
+            localStorage.setItem(STORAGE_KEY_MODE, mode);
+        }
+        
+        function toggleTheme() {
+            currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', currentTheme === 'light' ? 'light' : '');
+            localStorage.setItem(STORAGE_KEY_THEME, currentTheme);
+        }
+        
+        function applyTheme() {
+            if (currentTheme === 'light') {
+                html.setAttribute('data-theme', 'light');
+            }
+        }
+        
         function setTimezone(tz) {
             currentTz = tz;
             document.querySelectorAll('.tz-btn').forEach(btn => btn.classList.remove('active'));
             event.target.classList.add('active');
+            
             document.getElementById('timezone-label').textContent = timezones[tz].label;
+            document.getElementById('analogTimezoneLabel').textContent = timezones[tz].label;
             updateClock();
-        }
-        
-        function updateClock() {
-            let now = new Date();
-            
-            if (currentTz !== 'local' && timezones[currentTz].offset !== null) {
-                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
-                now = new Date(utc + (3600000 * timezones[currentTz].offset));
-            }
-            
-            const year = now.getFullYear();
-            const month = String(now.getMonth() + 1).padStart(2, '0');
-            const day = String(now.getDate()).padStart(2, '0');
-            const hours = String(now.getHours()).padStart(2, '0');
-            const minutes = String(now.getMinutes()).padStart(2, '0');
-            const seconds = String(now.getSeconds()).padStart(2, '0');
-            
-            document.getElementById('date').textContent = `${year}-${month}-${day}`;
-            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
-            document.getElementById('weekday').textContent = weekdays[now.getDay()];
-            
-            const secondsNum = now.getSeconds();
-            const activeDots = Math.floor(secondsNum / 12);
-            for (let i = 0; i < 5; i++) {
-                const dot = document.getElementById(`dot-${i}`);
-                dot.classList.toggle('active', i < activeDots);
-            }
-        }
-        
-        function toggleTheme() {
-            const html = document.documentElement;
-            const currentTheme = html.getAttribute('data-theme');
-            html.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
         }
         
         function toggleFullscreen() {
@@ -196,15 +343,73 @@
             }
         }
         
-        // 键盘快捷键
+        function updateClock() {
+            let now = new Date();
+            
+            if (currentTz !== 'local' && timezones[currentTz].offset !== null) {
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                now = new Date(utc + (3600000 * timezones[currentTz].offset));
+            }
+            
+            const ms = now.getMilliseconds();
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            // 更新数字时钟
+            document.getElementById('date').textContent = `${year}-${month}-${day}`;
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('weekday').textContent = weekdays[now.getDay()];
+            
+            // 更新秒针指示器
+            const secondsNum = now.getSeconds();
+            const activeDots = Math.floor(secondsNum / 12);
+            for (let i = 0; i < 5; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                dot.classList.toggle('active', i < activeDots);
+            }
+            
+            // 更新模拟表盘
+            document.getElementById('analogDate').textContent = `${year}-${month}-${day}`;
+            
+            const secDeg = (now.getSeconds() + ms / 1000) * 6;
+            const minDeg = (now.getMinutes() + now.getSeconds() / 60) * 6;
+            const hourDeg = ((now.getHours() % 12) + now.getMinutes() / 60) * 30;
+            
+            document.getElementById('secondHand').style.transform = `rotate(${secDeg}deg)`;
+            document.getElementById('minuteHand').style.transform = `rotate(${minDeg}deg)`;
+            document.getElementById('hourHand').style.transform = `rotate(${hourDeg}deg)`;
+        }
+        
+        // ============ 事件监听 ============
+        modeToggle.addEventListener('click', () => {
+            const newMode = currentMode === 'digital' ? 'analog' : 'digital';
+            applyMode(newMode);
+        });
+        
+        themeToggle.addEventListener('click', toggleTheme);
+        
+        document.addEventListener('dblclick', toggleFullscreen);
+        
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'm' || e.key === 'M') {
+                const newMode = currentMode === 'digital' ? 'analog' : 'digital';
+                applyMode(newMode);
+            }
             if (e.key === 't' || e.key === 'T') toggleTheme();
             if (e.key === 'f' || e.key === 'F') toggleFullscreen();
             if (e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen();
         });
         
+        // ============ 初始化 ============
+        generateClockNumbers();
+        applyTheme();
+        applyMode(currentMode);
         updateClock();
-        setInterval(updateClock, 1000);
+        setInterval(updateClock, 50);
     </script>
 </body>
 </html>
