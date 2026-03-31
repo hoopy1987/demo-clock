@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>当前时间</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+        }
+
+        .clock-container {
+            text-align: center;
+            padding: 40px 60px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .clock {
+            font-size: 4rem;
+            font-weight: 300;
+            color: #ffffff;
+            letter-spacing: 2px;
+            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+        }
+
+        .date {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, 0.7);
+            margin-top: 15px;
+            letter-spacing: 3px;
+        }
+
+        .label {
+            font-size: 0.9rem;
+            color: rgba(255, 255, 255, 0.5);
+            margin-top: 25px;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="clock-container">
+        <div class="date" id="date"></div>
+        <div class="clock" id="clock"></div>
+        <div class="label">Local Time</div>
+    </div>
+
+    <script>
+        function updateClock() {
+            const now = new Date();
+            
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            const dateStr = `${year}-${month}-${day}`;
+            const timeStr = `${hours}:${minutes}:${seconds}`;
+            
+            document.getElementById('date').textContent = dateStr;
+            document.getElementById('clock').textContent = timeStr;
+        }
+
+        updateClock();
+        setInterval(updateClock, 1000);
+    </script>
+</body>
+</html>
