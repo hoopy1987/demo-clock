@@ -45,6 +45,36 @@
             letter-spacing: 3px;
         }
 
+        .weekday {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            margin-top: 10px;
+            font-weight: 500;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+        }
+
+        .seconds-indicator {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+            margin-top: 30px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .dot.active {
+            background: #00d4ff;
+            box-shadow: 0 0 15px #00d4ff;
+            transform: scale(1.2);
+        }
+
         .label {
             font-size: 0.9rem;
             color: rgba(255, 255, 255, 0.5);
@@ -52,16 +82,44 @@
             text-transform: uppercase;
             letter-spacing: 5px;
         }
+
+        .deploy-badge {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            padding: 8px 16px;
+            background: rgba(0, 212, 255, 0.1);
+            border: 1px solid rgba(0, 212, 255, 0.3);
+            border-radius: 20px;
+            color: #00d4ff;
+            font-size: 0.8rem;
+            letter-spacing: 1px;
+        }
     </style>
 </head>
 <body>
     <div class="clock-container">
         <div class="date" id="date"></div>
+        <div class="weekday" id="weekday"></div>
         <div class="clock" id="clock"></div>
+        <div class="seconds-indicator" id="seconds-indicator"></div>
         <div class="label">Local Time</div>
     </div>
 
+    <div class="deploy-badge">🚀 Auto Deployed</div>
+
     <script>
+        const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        
+        // 创建60个秒针指示点
+        const indicatorContainer = document.getElementById('seconds-indicator');
+        for (let i = 0; i < 5; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.id = `dot-${i}`;
+            indicatorContainer.appendChild(dot);
+        }
+
         function updateClock() {
             const now = new Date();
             
@@ -74,9 +132,23 @@
             
             const dateStr = `${year}-${month}-${day}`;
             const timeStr = `${hours}:${minutes}:${seconds}`;
+            const weekdayStr = weekdays[now.getDay()];
             
             document.getElementById('date').textContent = dateStr;
             document.getElementById('clock').textContent = timeStr;
+            document.getElementById('weekday').textContent = weekdayStr;
+            
+            // 更新秒针指示器
+            const secondsNum = now.getSeconds();
+            const activeDots = Math.floor(secondsNum / 12);
+            for (let i = 0; i < 5; i++) {
+                const dot = document.getElementById(`dot-${i}`);
+                if (i < activeDots) {
+                    dot.classList.add('active');
+                } else {
+                    dot.classList.remove('active');
+                }
+            }
         }
 
         updateClock();
