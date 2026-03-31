@@ -3,115 +3,142 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>当前时间</title>
+    <title>Demo Clock - 世界时钟</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
+            --container-bg: rgba(255, 255, 255, 0.05);
+            --text-primary: #ffffff;
+            --text-secondary: rgba(255, 255, 255, 0.7);
+            --accent: #00d4ff;
         }
-
+        
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #e0e7ff 0%, #d1e0fd 50%, #c7d2fe 100%);
+            --container-bg: rgba(255, 255, 255, 0.6);
+            --text-primary: #1e1b4b;
+            --text-secondary: rgba(30, 27, 75, 0.7);
+            --accent: #2563eb;
+        }
+        
         body {
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f0f23 100%);
-            font-family: 'Segoe UI', 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: var(--bg-gradient);
+            font-family: 'Segoe UI', 'PingFang SC', sans-serif;
+            transition: background 0.3s ease;
         }
-
+        
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background: var(--container-bg);
+            border: 1px solid var(--accent);
+            border-radius: 25px;
+            color: var(--text-primary);
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+        }
+        
         .clock-container {
             text-align: center;
             padding: 40px 60px;
-            background: rgba(255, 255, 255, 0.05);
+            background: var(--container-bg);
             border-radius: 20px;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-shadow: 0 25px 50px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
         }
-
+        
         .clock {
             font-size: 4rem;
             font-weight: 300;
-            color: #ffffff;
+            color: var(--text-primary);
             letter-spacing: 2px;
-            text-shadow: 0 0 30px rgba(255, 255, 255, 0.3);
+            text-shadow: 0 0 30px rgba(0, 212, 255, 0.3);
         }
-
-        .date {
-            font-size: 1.5rem;
-            color: rgba(255, 255, 255, 0.7);
-            margin-top: 15px;
-            letter-spacing: 3px;
-        }
-
-        .weekday {
-            font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
-            margin-top: 10px;
-            font-weight: 500;
-            text-transform: uppercase;
-            letter-spacing: 4px;
-        }
-
-        .seconds-indicator {
+        
+        .date { font-size: 1.5rem; color: var(--text-secondary); margin-top: 15px; letter-spacing: 3px; }
+        .weekday { font-size: 1.2rem; color: var(--text-primary); margin-top: 10px; font-weight: 500; letter-spacing: 4px; }
+        .timezone-label { font-size: 0.8rem; color: var(--accent); margin-top: 15px; letter-spacing: 2px; }
+        
+        .seconds-indicator { display: flex; justify-content: center; gap: 8px; margin-top: 30px; }
+        .dot { width: 12px; height: 12px; border-radius: 50%; background: rgba(128, 128, 128, 0.3); transition: all 0.3s ease; }
+        .dot.active { background: var(--accent); box-shadow: 0 0 15px var(--accent); transform: scale(1.2); }
+        
+        .timezone-buttons {
             display: flex;
-            justify-content: center;
-            gap: 8px;
+            gap: 15px;
             margin-top: 30px;
+            flex-wrap: wrap;
+            justify-content: center;
         }
-
-        .dot {
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.2);
+        
+        .tz-btn {
+            padding: 10px 20px;
+            background: var(--container-bg);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 25px;
+            color: var(--text-secondary);
+            cursor: pointer;
             transition: all 0.3s ease;
-        }
-
-        .dot.active {
-            background: #00d4ff;
-            box-shadow: 0 0 15px #00d4ff;
-            transform: scale(1.2);
-        }
-
-        .label {
             font-size: 0.9rem;
-            color: rgba(255, 255, 255, 0.5);
-            margin-top: 25px;
-            text-transform: uppercase;
-            letter-spacing: 5px;
         }
-
-        .deploy-badge {
-            position: fixed;
-            bottom: 20px;
-            right: 20px;
-            padding: 8px 16px;
-            background: rgba(0, 212, 255, 0.1);
-            border: 1px solid rgba(0, 212, 255, 0.3);
-            border-radius: 20px;
-            color: #00d4ff;
-            font-size: 0.8rem;
-            letter-spacing: 1px;
+        
+        .tz-btn:hover, .tz-btn.active {
+            border-color: var(--accent);
+            color: var(--accent);
+            box-shadow: 0 0 15px rgba(0, 212, 255, 0.3);
         }
+        
+        .label { font-size: 0.9rem; color: var(--text-secondary); margin-top: 25px; letter-spacing: 5px; }
+        .deploy-badge { position: fixed; bottom: 20px; right: 20px; padding: 8px 16px; background: rgba(0, 212, 255, 0.1); border: 1px solid rgba(0, 212, 255, 0.3); border-radius: 20px; color: #00d4ff; font-size: 0.8rem; }
+        .help-text { position: fixed; bottom: 20px; left: 20px; font-size: 0.75rem; color: var(--text-secondary); opacity: 0.7; }
     </style>
 </head>
 <body>
-    <div class="clock-container">
+    <button class="theme-toggle" onclick="toggleTheme()" title="切换主题 (T)">🌙/☀️</button>
+    
+    <div class="clock-container" ondblclick="toggleFullscreen()">
         <div class="date" id="date"></div>
         <div class="weekday" id="weekday"></div>
         <div class="clock" id="clock"></div>
+        <div class="timezone-label" id="timezone-label">本地时间</div>
         <div class="seconds-indicator" id="seconds-indicator"></div>
-        <div class="label">Local Time</div>
+        
+        <div class="timezone-buttons">
+            <button class="tz-btn active" onclick="setTimezone('local')">🕐 本地</button>
+            <button class="tz-btn" onclick="setTimezone('newyork')">🗽 纽约</button>
+            <button class="tz-btn" onclick="setTimezone('london')">🏛️ 伦敦</button>
+            <button class="tz-btn" onclick="setTimezone('tokyo')">🗼 东京</button>
+        </div>
+        
+        <div class="label">双击进入全屏 | T切换主题 | F切换全屏</div>
     </div>
-
+    
     <div class="deploy-badge">🚀 Auto Deployed</div>
+    <div class="help-text">Develop Branch - Preview</div>
 
     <script>
         const weekdays = ['星期日', '星期一', '星期二', '星期三', '星期四', '星期五', '星期六'];
+        const timezones = {
+            local: { label: '本地时间', offset: null },
+            newyork: { label: '纽约时间', offset: -5 },
+            london: { label: '伦敦时间', offset: 0 },
+            tokyo: { label: '东京时间', offset: 9 }
+        };
+        let currentTz = 'local';
         
-        // 创建60个秒针指示点
+        // 创建秒针指示点
         const indicatorContainer = document.getElementById('seconds-indicator');
         for (let i = 0; i < 5; i++) {
             const dot = document.createElement('div');
@@ -119,9 +146,22 @@
             dot.id = `dot-${i}`;
             indicatorContainer.appendChild(dot);
         }
-
+        
+        function setTimezone(tz) {
+            currentTz = tz;
+            document.querySelectorAll('.tz-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('timezone-label').textContent = timezones[tz].label;
+            updateClock();
+        }
+        
         function updateClock() {
-            const now = new Date();
+            let now = new Date();
+            
+            if (currentTz !== 'local' && timezones[currentTz].offset !== null) {
+                const utc = now.getTime() + (now.getTimezoneOffset() * 60000);
+                now = new Date(utc + (3600000 * timezones[currentTz].offset));
+            }
             
             const year = now.getFullYear();
             const month = String(now.getMonth() + 1).padStart(2, '0');
@@ -130,27 +170,39 @@
             const minutes = String(now.getMinutes()).padStart(2, '0');
             const seconds = String(now.getSeconds()).padStart(2, '0');
             
-            const dateStr = `${year}-${month}-${day}`;
-            const timeStr = `${hours}:${minutes}:${seconds}`;
-            const weekdayStr = weekdays[now.getDay()];
+            document.getElementById('date').textContent = `${year}-${month}-${day}`;
+            document.getElementById('clock').textContent = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('weekday').textContent = weekdays[now.getDay()];
             
-            document.getElementById('date').textContent = dateStr;
-            document.getElementById('clock').textContent = timeStr;
-            document.getElementById('weekday').textContent = weekdayStr;
-            
-            // 更新秒针指示器
             const secondsNum = now.getSeconds();
             const activeDots = Math.floor(secondsNum / 12);
             for (let i = 0; i < 5; i++) {
                 const dot = document.getElementById(`dot-${i}`);
-                if (i < activeDots) {
-                    dot.classList.add('active');
-                } else {
-                    dot.classList.remove('active');
-                }
+                dot.classList.toggle('active', i < activeDots);
             }
         }
-
+        
+        function toggleTheme() {
+            const html = document.documentElement;
+            const currentTheme = html.getAttribute('data-theme');
+            html.setAttribute('data-theme', currentTheme === 'light' ? 'dark' : 'light');
+        }
+        
+        function toggleFullscreen() {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        }
+        
+        // 键盘快捷键
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 't' || e.key === 'T') toggleTheme();
+            if (e.key === 'f' || e.key === 'F') toggleFullscreen();
+            if (e.key === 'Escape' && document.fullscreenElement) document.exitFullscreen();
+        });
+        
         updateClock();
         setInterval(updateClock, 1000);
     </script>
